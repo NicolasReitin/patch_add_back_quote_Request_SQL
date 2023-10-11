@@ -4,13 +4,13 @@ function putRequestToSQL8($requestSQLOriginal){
     $array = [];
     $requestSQL = $requestSQLOriginal;
 
-    // tous les selector sont false au départ
+    // All selectors are initially set to false.
     $select = false;
     $update = false;
     $insertinto = false;
     $delete = false;
 
-    //détermine le selector utilisé dans la requête et l'efface
+    //Determine the selector used in the query and remove it
     if (str_contains($requestSQL, "SELECT ")) 
     {
         $select = true; 
@@ -32,19 +32,19 @@ function putRequestToSQL8($requestSQLOriginal){
         $requestSQL = str_replace("DELETE ", "",$requestSQL);
     }
 
-    //récupère la place de FROM = lenght
+    //Retrieve the position of 'FROM' = length
     $pos = strpos($requestSQL, " FROM", 0);
 
-    //rècupère tous à partir de FROM jusqu'à la fin de la requete
+    //Retrieve everything from 'FROM' to the end of the query
     $requestSQLEnd = substr($requestSQL, $pos);
 
-    //Tronque à partir de la valeur de la position de" FROM" et récupère le début jusqu'à "FROM"
+    //Truncate starting from the position of 'FROM' and retrieve everything from the beginning up to 'FROM'
     $requestSQL = substr($requestSQL, 0, $pos);
 
-    //remplace " " par ""
+    //replace " " with ""
     $requestSQL = str_replace(" ", "",$requestSQL);
 
-    // Si contient déjà des back quotes ou "*", renvoie la requête original
+    // If it already contains back quotes or '*', return the original query.
     if (str_contains($requestSQL, "*")){
         return $requestSQLOriginal;
 
@@ -52,31 +52,24 @@ function putRequestToSQL8($requestSQLOriginal){
         if (str_contains($requestSQL, "`")){
             return $requestSQLOriginal;
             
-        }else{ // sinon ajoute des back quote pour chaque valeur
+        }else{ // Otherwise, add backquotes for each value
             $array = explode(",", $requestSQL);
     
             $column = "";
             
             foreach ($array as &$word){
-                if ($word === "") break;
-                if ($word != 'null'){
-                    $column .= "`" .  $word . "`,";
-                }
-                else{
-                    $column .= $word . ",";
-                }
+                $column .= "`" .  $word . "`,";
             }
             
-            //enlève le dernier caractère à savoir ","
+            //Remove the last character, which is ','
             $column = rtrim($column, ",");
             
-            // reconstruit la requete initiale
+            // Reconstruct the initial query
             if ($select == true) $column = "SELECT " . $column . $requestSQLEnd;
             if ($update == true) $column = "UPDATE " . $column . $requestSQLEnd;
             if ($insertinto == true) $column = "INSERT INTO " . $column . $requestSQLEnd;
             if ($delete == true) $column = "DELETE " . $column . $requestSQLEnd;
-            
-            // echo $column;
+
             return $column; 
     
         }
@@ -84,7 +77,8 @@ function putRequestToSQL8($requestSQLOriginal){
         
 }
 
-// $result = putRequestToSQL8("DELETE views, ar, vr FROM t_users WHERE id=? LIMIT 1");
+//exemple :
+// $result = putRequestToSQL8("SELECT views, name, age FROM t_users WHERE id=?");
 // echo $result;
 
 
